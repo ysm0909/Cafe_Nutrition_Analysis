@@ -33,7 +33,8 @@ data = {
     "포화지방(g)": [],
     "당류(g)": [],
     "단백질(g)": [],
-    "카페인(mg)": []
+    "카페인(mg)": [],
+    "알레르기성분": []
 }
 
 # 모든 카테고리 요소 찾기
@@ -68,6 +69,7 @@ for category_index in range(len(categories)):
             data["당류(g)"].append(driver.find_element(By.XPATH, '//*[@id="container"]/div[2]/div[1]/div[2]/form/fieldset/div/div[2]/ul[2]/li[2]/dl/dd').text)
             data["단백질(g)"].append(driver.find_element(By.XPATH, '//*[@id="container"]/div[2]/div[1]/div[2]/form/fieldset/div/div[2]/ul[1]/li[3]/dl/dd').text)
             data["카페인(mg)"].append(driver.find_element(By.XPATH, '//*[@id="container"]/div[2]/div[1]/div[2]/form/fieldset/div/div[2]/ul[2]/li[3]/dl/dd').text)
+            data["알레르기성분"].append(driver.find_element(By.XPATH, '//*[@id="container"]/div[2]/div[1]/div[2]/form/fieldset/div/div[3]/p').text)
 
             # 뒤로 가기 후 다음 음료로 이동
             driver.back()
