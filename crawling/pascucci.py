@@ -2,7 +2,9 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import time
 
@@ -33,18 +35,22 @@ data = {
 
 # 카테고리별 크롤링 시작
 try:
-    # 카테고리 클릭
-    category_xpath = '//*[@id="container"]/div[2]/ul/li[3]'
-    driver.find_element(By.XPATH, category_xpath).click()
-    time.sleep(1)
 
     # 하위 카테고리 반복
     for n in range(1, 4):  # N=1부터 N=3까지 반복
-        try: 
+
+        # 메인 카테고리 클릭
+        category_xpath = '//*[@id="container"]/div[2]/ul/li[3]'
+        driver.find_element(By.XPATH, category_xpath).click()
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="container"]/div[2]/ul/li[3]/ul/li[1]')))
+        time.sleep(1)
+
+        try:
             sub_category_xpath = f'//*[@id="container"]/div[2]/ul/li[3]/ul/li[{n}]'
             sub_category_element = driver.find_element(By.XPATH, sub_category_xpath)
             category_name = sub_category_element.text
             sub_category_element.click()
+            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="container"]/div[2]/ul/li[4]/ul/li[1]')))
             time.sleep(1)
             
             # 중분류 리스트 반복
@@ -55,7 +61,7 @@ try:
                     click_mid_element = driver.find_element(By.XPATH, click_mid_xpath)
                     click_mid_element.click()
                     time.sleep(1)
-                    
+
                     middle_category_xpath = f'//*[@id="container"]/div[2]/ul/li[4]/ul/li[{a}]'
                     middle_category_element = driver.find_element(By.XPATH, middle_category_xpath)
                     middle_category_element.click()
@@ -84,32 +90,35 @@ try:
                                             retries += 1
                                             driver.execute_script("arguments[0].click();", element)  # JavaScript로 클릭
 
+                                    # section 번호 설정
+                                    section_num = 1 if Q == 1 else 2
+
                                     # 메뉴 정보 크롤링 (기본값 설정)
                                     def get_text(xpath, default="정보 없음"):
                                         try:
                                             return driver.find_element(By.XPATH, xpath).text
                                         except NoSuchElementException:
                                             return default
-                                        
+
                                     time.sleep(1)
 
                                     # 메뉴명 및 세부 정보 추출
                                     data["카테고리"].append(category_name)
-                                    data["메뉴명"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[1]/div/h1/strong'))
-                                    info_text = get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[1]/div/p[1]')
+                                    data["메뉴명"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[1]/div/h1/strong'))
+                                    info_text = get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[1]/div/p[1]')
                                     data["정보"].append(info_text.split("※")[0] if "※" in info_text else info_text)
-                                    data["용량"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[2]/div/ul/li[1]/ul/li[1]/p'))
-                                    data["1회제공량(kcal)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[2]/div/ul/li[1]/ul/li[2]/p'))
-                                    data["나트륨 (mg)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[2]/div/ul/li[1]/ul/li[6]/p'))
-                                    data["포화지방 (g)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[2]/div/ul/li[1]/ul/li[5]/p'))
-                                    data["당류 (g)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[2]/div/ul/li[1]/ul/li[3]/p'))
-                                    data["단백질 (g)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[2]/div/ul/li[1]/ul/li[4]/p'))
-                                    data["카페인 (mg)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[2]/div/ul/li[1]/ul/li[7]/p'))
-                                    data["알레르기성분"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[2]/div/ul/li[1]/ul/li[8]/p'))
+                                    data["용량"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[2]/div/ul/li[1]/ul/li[1]/p'))
+                                    data["1회제공량(kcal)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[2]/div/ul/li[1]/ul/li[2]/p'))
+                                    data["나트륨 (mg)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[2]/div/ul/li[1]/ul/li[6]/p'))
+                                    data["포화지방 (g)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[2]/div/ul/li[1]/ul/li[5]/p'))
+                                    data["당류 (g)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[2]/div/ul/li[1]/ul/li[3]/p'))
+                                    data["단백질 (g)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[2]/div/ul/li[1]/ul/li[4]/p'))
+                                    data["카페인 (mg)"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[2]/div/ul/li[1]/ul/li[7]/p'))
+                                    data["알레르기성분"].append(get_text(f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[2]/div/ul/li[1]/ul/li[8]/p'))
 
                                     # 닫기 버튼
                                     try:
-                                        close_button = driver.find_element(By.XPATH, f'//*[@id="container"]/div[3]/ul/li[{c}]/section[1]/div/div[1]/div/div[1]/button/img')
+                                        close_button = driver.find_element(By.XPATH, f'//*[@id="container"]/div[3]/ul/li[{c}]/section[{section_num}]/div/div[1]/div/div[1]/button/img')
                                         close_button.click()
                                     except NoSuchElementException:
                                         pass
@@ -123,6 +132,9 @@ try:
                     print(f"Middle category {a} not found.")
                     break  # 더 이상 중분류가 없으면 반복 종료
 
+            # 하위 카테고리로 돌아가기
+            driver.back()
+
         except NoSuchElementException:
             print(f"Sub-category {n} not found.")
             continue  # 하위 카테고리가 없는 경우 건너뜀
@@ -134,4 +146,6 @@ finally:
     print("CSV 파일 저장 완료")
 
     driver.quit()
+
+
 
